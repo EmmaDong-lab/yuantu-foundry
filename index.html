@@ -3,39 +3,91 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>源图 harness</title>
+  <title>源图 Foundry</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       background: linear-gradient(135deg, #f8f5ff 0%, #ffffff 100%);
-      padding: 40px 20px;
+      background-attachment: fixed;
+      padding: 40px 20px 80px;
       color: #333;
       min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
     }
     .container {
       max-width: 1200px;
       margin: 0 auto;
     }
+
+    /* ---------- 页头：左标题 + 右侧视图切换 ---------- */
+    .page-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+      margin-bottom: 34px;
+    }
+    .head-left { min-width: 0; }
     h1 {
-      text-align: center;
-      margin-bottom: 50px;
       font-size: 32px;
       font-weight: 600;
       color: #5a4fcf;
       letter-spacing: 1px;
+      text-align: left;
     }
+    .sub {
+      margin-top: 8px;
+      font-size: 13px;
+      color: #787774;
+      line-height: 1.6;
+    }
+    .seg {
+      display: flex;
+      flex-shrink: 0;
+      background: #fff;
+      border: 1px solid #ececf1;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(90, 79, 207, 0.06);
+    }
+    .seg button {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      font: inherit;
+      font-size: 13px;
+      color: #787774;
+      padding: 9px 22px;
+      cursor: pointer;
+      transition: background 0.16s ease, color 0.16s ease;
+    }
+    .seg button + button { border-left: 1px solid #ececf1; }
+    .seg button:hover { background: #faf9ff; }
+    .seg button.on {
+      background: #efedfd;
+      color: #5a4fcf;
+      font-weight: 600;
+    }
+
+    /* ---------- 图片列表：默认单列大图 ---------- */
     .gallery {
       display: flex;
       flex-direction: column;
-      gap: 50px;
+      gap: 40px;
     }
     .image-card {
       background: #fff;
       border-radius: 16px;
       overflow: hidden;
       box-shadow: 0 4px 20px rgba(90, 79, 207, 0.08);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      animation: cardIn 0.45s ease both;
+      transition: transform 0.28s ease, box-shadow 0.28s ease;
+    }
+    @keyframes cardIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
     .image-card:hover {
       transform: translateY(-4px);
@@ -56,6 +108,34 @@
       height: auto;
       display: block;
       border-radius: 8px;
+      background: #f6f6f9;
+    }
+
+    /* ---------- 网格视图：规则网格，图片完整居中显示（不裁切） ---------- */
+    .gallery.grid-view {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(235px, 1fr));
+      gap: 22px;
+    }
+    .gallery.grid-view .image-title {
+      padding: 12px 12px 8px;
+      font-size: 13.5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .gallery.grid-view .image-wrapper {
+      height: 168px;
+      padding: 0 12px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .gallery.grid-view .image-wrapper img {
+      width: auto;
+      height: auto;
+      max-width: 100%;
+      max-height: 100%;
     }
 
     /* Lightbox */
@@ -115,58 +195,89 @@
       font-size: 14px;
       pointer-events: none;
     }
+
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-thumb {
+      background: #dcdce4;
+      border-radius: 6px;
+      border: 3px solid transparent;
+      background-clip: content-box;
+    }
+    ::-webkit-scrollbar-thumb:hover { background: #c9c9d6; background-clip: content-box; }
+
+    @media (max-width: 640px) {
+      body { padding: 26px 14px 60px; }
+      h1 { font-size: 24px; }
+      .page-head { align-items: flex-start; }
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>源图 harness</h1>
-    <div class="gallery">
+    <div class="page-head">
+      <div class="head-left">
+        <h1>源图 Foundry</h1>
+        <p class="sub">点击图片放大，支持滚轮缩放与拖拽查看细节</p>
+      </div>
+      <div class="seg" id="viewSeg">
+        <button data-view="grid">网格</button>
+        <button data-view="large" class="on">大图</button>
+      </div>
+    </div>
+
+    <div class="gallery" id="gallery">
       <div class="image-card">
         <div class="image-title">0. 功能架构说明</div>
         <div class="image-wrapper" onclick="openLightbox('0.功能架构说明.png')">
-          <img src="0.功能架构说明.png" alt="功能架构说明">
+          <img src="0.功能架构说明.png" width="3880" height="3872" alt="功能架构说明" loading="lazy">
         </div>
       </div>
       <div class="image-card">
         <div class="image-title">1. 登录页</div>
         <div class="image-wrapper" onclick="openLightbox('1.登录页.png')">
-          <img src="1.登录页.png" alt="登录页">
+          <img src="1.登录页.png" width="4434" height="2080" alt="登录页" loading="lazy">
         </div>
       </div>
       <div class="image-card">
         <div class="image-title">2. 源图 AI 工作台主页</div>
         <div class="image-wrapper" onclick="openLightbox('2.源图 AI 工作台主页.png')">
-          <img src="2.源图 AI 工作台主页.png" alt="源图 AI 工作台主页">
+          <img src="2.源图 AI 工作台主页.png" width="4230" height="1888" alt="源图 AI 工作台主页" loading="lazy">
         </div>
       </div>
       <div class="image-card">
-        <div class="image-title">3. 对话-调用工作流</div>
-        <div class="image-wrapper" onclick="openLightbox('3.对话-调用工作流.png')">
-          <img src="3.对话-调用工作流.png" alt="对话-调用工作流">
+        <div class="image-title">3. 任务-分析工作流</div>
+        <div class="image-wrapper" onclick="openLightbox('3.任务-分析工作流.png')">
+          <img src="3.任务-分析工作流.png" width="4230" height="1888" alt="任务-分析工作流" loading="lazy">
         </div>
       </div>
       <div class="image-card">
         <div class="image-title">4. 源图能力中心</div>
         <div class="image-wrapper" onclick="openLightbox('4.源图能力中心.png')">
-          <img src="4.源图能力中心.png" alt="源图能力中心">
+          <img src="4.源图能力中心.png" width="4230" height="1888" alt="源图能力中心" loading="lazy">
         </div>
       </div>
       <div class="image-card">
-        <div class="image-title">5. 项目管理</div>
-        <div class="image-wrapper" onclick="openLightbox('5.项目管理.png')">
-          <img src="5.项目管理.png" alt="项目管理">
+        <div class="image-title">5. 可信代码库能力</div>
+        <div class="image-wrapper" onclick="openLightbox('5.可信代码库能力.png')">
+          <img src="5.可信代码库能力.png" width="4230" height="1888" alt="可信代码库能力" loading="lazy">
         </div>
       </div>
       <div class="image-card">
-        <div class="image-title">6. 图谱浏览器</div>
-        <div class="image-wrapper" onclick="openLightbox('6.图谱浏览器.png')">
-          <img src="6.图谱浏览器.png" alt="图谱浏览器">
+        <div class="image-title">6. 项目管理</div>
+        <div class="image-wrapper" onclick="openLightbox('6.项目管理.png')">
+          <img src="6.项目管理.png" width="4326" height="1984" alt="项目管理" loading="lazy">
         </div>
       </div>
       <div class="image-card">
-        <div class="image-title">7. 自动化任务</div>
-        <div class="image-wrapper" onclick="openLightbox('7.自动化任务.png')">
-          <img src="7.自动化任务.png" alt="自动化任务">
+        <div class="image-title">7. 图谱浏览器</div>
+        <div class="image-wrapper" onclick="openLightbox('7.图谱浏览器.png')">
+          <img src="7.图谱浏览器.png" width="4326" height="1984" alt="图谱浏览器" loading="lazy">
+        </div>
+      </div>
+      <div class="image-card">
+        <div class="image-title">8. 自动化任务</div>
+        <div class="image-wrapper" onclick="openLightbox('8.自动化任务.png')">
+          <img src="8.自动化任务.png" width="4326" height="1984" alt="自动化任务" loading="lazy">
         </div>
       </div>
     </div>
@@ -248,6 +359,27 @@
         document.body.style.overflow = '';
       }
     });
+
+    /* ---------- 网格 / 大图 视图切换 ---------- */
+    (function () {
+      var gallery = document.getElementById('gallery');
+      var seg = document.getElementById('viewSeg');
+
+      // 两种视图都用纯 CSS 布局：默认单列大图；加上 .grid-view 变成规则网格
+      seg.addEventListener('click', function (e) {
+        var btn = e.target.closest('button');
+        if (!btn) return;
+        Array.prototype.forEach.call(this.querySelectorAll('button'), function (b) {
+          b.classList.toggle('on', b === btn);
+        });
+        gallery.classList.toggle('grid-view', btn.getAttribute('data-view') === 'grid');
+      });
+
+      // 逐张淡入
+      Array.prototype.forEach.call(gallery.children, function (card, i) {
+        card.style.animationDelay = Math.min(i * 40, 320) + 'ms';
+      });
+    })();
   </script>
 </body>
 </html>
